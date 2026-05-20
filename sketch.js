@@ -2,6 +2,14 @@
 // Week 2 Example 2: Platformer with Platforms Array
 // ============================================================
 
+let bitBackground;
+let sprite;
+// ------------------------------------------------------------
+function preload() {
+  bitBackground = loadImage("assets/images/background.jpg");
+  sprite = loadImage("assets/images/sprite.png");
+}
+
 // ------------------------------------------------------------
 // PLATFORMS ARRAY
 // Each platform is an object with x, y, width, and height.
@@ -15,12 +23,12 @@
 let platforms = [
   // { x, y, w, h }
   { x: 0,   y: 410, w: 800, h: 40 }, // ground (full width floor)
-  { x: 80,  y: 310, w: 120, h: 16 }, // left low platform
-  { x: 280, y: 240, w: 140, h: 16 }, // centre platform
-  { x: 500, y: 170, w: 120, h: 16 }, // right high platform
+  { x: 60,  y: 310, w: 100, h: 16 }, // farthest left low platform
+  { x: 290, y: 220, w: 140, h: 16 }, // centre platform
+  { x: 450, y: 110, w: 120, h: 16 }, // right high platform
   { x: 160, y: 150, w: 100, h: 16 }, // left high platform
-  { x: 360, y: 320, w: 110, h: 16 }, // centre low platform
-  { x: 620, y: 290, w: 130, h: 16 }, // far right platform
+  { x: 300, y: 320, w: 110, h: 16 }, // centre lower platform
+  { x: 610, y: 290, w: 130, h: 16 }, // far right platform that will break
 ];
 
 // ------------------------------------------------------------
@@ -52,11 +60,11 @@ let player = {
 // ------------------------------------------------------------
 const GRAVITY = 0.6; // downward force added to vy every frame
 
-// Blob animation time — increases each frame to animate the wobble
-let blobT = 0;
+// helps with showing the physics of the sprite
+let spriteT = 0;
 
 // Platform colour stored as an array so it can be reused easily
-const PLATFORM_COLOR = [255, 160, 50]; // warm orange
+const PLATFORM_COLOR = [128, 122, 46]; // greenish colour
 
 // ============================================================
 // setup()
@@ -77,7 +85,7 @@ function setup() {
 // apply physics, resolve collisions, and draw everything.
 // ============================================================
 function draw() {
-  background(10);
+  background(bitBackground);
 
   handleInput();
   applyPhysics();
@@ -87,7 +95,7 @@ function draw() {
   drawPlayer();
   drawHUD();
 
-  blobT += 0.015; // advance blob wobble animation each frame
+  spriteT += 0.015; // advance sprite animation each frame
 }
 
 // ------------------------------------------------------------
@@ -206,6 +214,11 @@ function resolvePlatformCollisions() {
       player.y = platTop - player.r; // snap to platform surface
       player.vy = 0;                 // stop falling
       player.onGround = true;        // allow jumping again
+
+      // Remove the far right platform (index 6) when the player lands on it
+      if (i === 6) {
+        platforms.splice(6, 1); // remove 1 element at index 6
+      }
     }
   }
 }
@@ -222,7 +235,7 @@ function drawPlatforms() {
 
   for (let i = 0; i < platforms.length; i++) {
     let p = platforms[i];
-    rect(p.x, p.y, p.w, p.h, 6); // rounded corners
+    rect(p.x, p.y, p.w, p.h, 4); // rounded corners
   }
 }
 
@@ -235,32 +248,7 @@ function drawPlatforms() {
 // ------------------------------------------------------------
 function drawPlayer() {
   push(); // save current drawing settings
-
-  fill(0, 200, 180); // teal
-  noStroke();
-
-  beginShape();
-  let numPoints = 48; // more points = smoother shape
-  for (let i = 0; i < numPoints; i++) {
-    let angle = (TWO_PI / numPoints) * i;
-
-    // noise() returns a smooth random value between 0 and 1.
-    // We use it to push each vertex in or out slightly.
-    let noiseVal = noise(cos(angle) * 0.8 + blobT, sin(angle) * 0.8 + blobT);
-
-    // map() converts noise (0–1) to a radius offset (-7 to +7 pixels)
-    let r = player.r + map(noiseVal, 0, 1, -7, 7);
-
-    // Convert polar coordinates (angle, radius) to x/y
-    vertex(player.x + cos(angle) * r, player.y + sin(angle) * r);
-  }
-  endShape(CLOSE);
-
-  // Draw two simple eyes
-  fill(10);
-  ellipse(player.x - 7, player.y - 5, 7, 7);
-  ellipse(player.x + 7, player.y - 5, 7, 7);
-
+image(sprite, player.x, player.y-30, player.r * 2.5, player.r * 2.5);
   pop(); // restore drawing settings
 }
 
